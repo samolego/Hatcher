@@ -1,23 +1,28 @@
 package org.samo_lego.hatcher.event;
 
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.phys.BlockHitResult;
 
 public class BlockAttackListener implements AttackBlockCallback {
 
     private static long lastInvokeTime = 0L;
+    private static final MutableComponent NO_ITEMS_MSG = Component.literal("[Hatcher]").withStyle(ChatFormatting.DARK_PURPLE).append(Component.literal("You need piston and a lever!").withStyle(ChatFormatting.RED));
 
     @Override
     public InteractionResult interact(Player player, Level world, InteractionHand hand, BlockPos pos, Direction direction) {
@@ -38,17 +43,17 @@ public class BlockAttackListener implements AttackBlockCallback {
                 int pwrIx = -1;
 
                 for (int i = 0; i < 9; ++i) {
-                    var stack = inventory.getItem(i);
+                    var item = inventory.getItem(i).getItem();
 
-                    if (stack.getItem() == Items.PISTON || stack.getItem() == Items.STICKY_PISTON) {
+                    if (item == Items.PISTON || item == Items.STICKY_PISTON) {
                         pistonIx = i;
-                    } else if (stack.getItem() == Items.LEVER) {
+                    } else if (item == Items.LEVER || item instanceof BlockItem bitem && bitem.getBlock() instanceof ButtonBlock) {
                         pwrIx = i;
                     }
                 }
 
                 if (pistonIx == -1 || pwrIx == -1) {
-                    player.sendSystemMessage(Component.literal("[Hatcher] You need piston and a lever!"));
+                    player.sendSystemMessage(NO_ITEMS_MSG);
                     return InteractionResult.PASS;
                 }
 
